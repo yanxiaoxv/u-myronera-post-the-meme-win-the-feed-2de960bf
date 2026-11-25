@@ -29,6 +29,13 @@ const dst = join(outDir, "POST.json");
 // means the post has not been published yet, and copying nothing
 // would silently produce an invalid entry.
 copyFileSync(src, dst);
+// The copy must be whole: a short write would hand the house a
+// truncated file, so compare sizes before trusting the copy.
+const srcSize = statSync(src).size;
+const dstSize = statSync(dst).size;
+if (dstSize !== srcSize) {
+  throw new Error(`POST.json copy is incomplete: ${dstSize} of ${srcSize} bytes`);
+}
 // Read back what actually landed on disk: a bad copy must fail
 // loudly here, not at grading time.
 const written = JSON.parse(readFileSync(dst, "utf-8")) as unknown;
